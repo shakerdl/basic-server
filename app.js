@@ -1,49 +1,105 @@
+// A BASIC Node server
+// Routing Requests
+
 const http = require("http");
 const url = require("url");
-const StringDecoder = require("string_decoder").StringDecoder; // why he did put the StingDecoder twice
-const util = require("util");
-const formidable = require("formidable"); 
 
-const server = http.createServer((req,res)=>{
-let path = url.parse( req.url,true);
+const server = http.createServer(function(req, res) {
+  //console.log(req.url);
+  let parsedURL = url.parse(req.url, true);
+  let path = parsedURL.pathname;
+  // parsedURL.pathname  parsedURL.query
+  // standardize the requested url by removing any '/' at the start or end
+  // '/folder/to/file/' becomes 'folder/to/file'
+  path = path.replace(/^\/+|\/+$/g, "");
+  console.log(path);
+  let qs = parsedURL.query;
+  let headers = req.headers;
+  let method = req.method.toLowerCase();
 
-if (req.method.toLowerCase() = 'post') {
- let form = new formidable.IncomingForm();
- form.parse(req,(err,fields,files)=>{
-if (err){
-    console.error(err.message);
-    return;
-}
-    res.writeHead(200,"OK",{"Content-Type":"text/plain"});
-    res.write('the POST output Response\n\n');
-    res.end(util.inspect({fields:fields,files:files}));
-
- })
-}else if (req.method.toLowerCase() = 'get') {
-    res.writeHead(200,"OK",{"Content-Type":"text/plain"});
-    res.write("the response\n\n");
-    res.write(util.inspect(path.query)+"\n\n");
-    res.end("End of the message")
-}
-else {
-    // deal with other method
-}
-// let decoder = new StringDecoder('utf-8');
-// let buffer = '';
-// req.on('data',(chunk)=>{
-// buffer += decoder.write(chunk);
-// });
-
-// req.on('end',()=>{
-//     buffer += decoder.end();
-//     res.writeHead(200,"OK",{"Content-Type":"text/plain"});
-//     res.write("the response\n\n");
-//     res.write(util.inspect(path.query)+"\n\n");
-//     res.write(buffer + "\n\n")
-//     res.end("End of the message")
-// });
+  req.on("data", function() {
+    console.log("got some data");
+    //if no data is passed we don't see this messagee
+    //but we still need the handler so the "end" function works.
+  });
+  req.on("end", function() {
+    //request part is finished... we can send a response now
+    console.log("send a response");
+    //we will use the standardized version of the path
+    let route =
+      typeof routes[path] !== "undefined" ? routes[path] : routes["notFound"];
+    let data = {
+      path: path,
+      queryString: qs,
+      headers: headers,
+      method: method
+    };
+    //pass data incase we need info about the request
+    //pass the response object because router is outside our scope
+    route(data, res);
+  });
 });
 
-server.listen(3000,()=>{
-    console.log("the port is listening 3000");
+server.listen(1234, function() {
+  console.log("Listening on port 1234");
 });
+
+//define functions for the different Routes
+//This object and the functions could be defined in another file that we import
+//Each route has a function that takes two parameters
+//data: the info about the request
+//callback: the function to call to send the response
+let routes = {
+  kenny: function(data, res) {
+    // this function called if the path is 'kenny'
+    let payload = {
+      name: "Kenny"
+    };
+    let payloadStr = JSON.stringify(payload);
+    res.setHeader("Content-Type", "application/json");
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.writeHead(200);
+    res.write(payloadStr);
+    res.end("\n");
+  },
+  cartman: function(data, res) {
+    // this function called if the path is 'cartman'
+    let payload = {
+      name: "Cartman"
+    };
+    let payloadStr = JSON.stringify(payload);
+    res.setHeader("Content-Type", "application/json");
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.writeHead(200);
+    res.write(payloadStr);
+    res.end("\n");
+  },
+  "kenny/is/mysterion": function(data, res) {
+    //this function called if path is 'kenny/is/mysterion'
+    let payload = {
+      name: "Mysterion",
+      enemy: "The Coon",
+      today: +new Date()
+    };
+    let payloadStr = JSON.stringify(payload);
+    res.setHeader("Content-Type", "application/json");
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.writeHead(200);
+    res.write(payloadStr);
+    res.end("\n");
+  },
+  notFound: function(data, res) {
+    //this one gets called if no route matches
+    let payload = {
+      message: "File Not Found",
+      code: 404
+    };
+    let payloadStr = JSON.stringify(payload);
+    res.setHeader("Content-Type", "application/json");
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.writeHead(404);
+
+    res.write(payloadStr);
+    res.end("\n");
+  }
+};
