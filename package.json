@@ -1,14 +1,20 @@
 {
   "name": "basic-server",
-  "version": "1.0.2",
+  "version": "1.0.0",
   "description": "",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js",
+    "start": "nodemon app.js",
     "build": "npm version patch",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "formidable": "^1.2.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.13"
+  }
 }
